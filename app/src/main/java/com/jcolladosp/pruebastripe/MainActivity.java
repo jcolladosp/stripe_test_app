@@ -21,6 +21,11 @@ import com.stripe.android.TokenCallback;
 import com.stripe.android.model.Card;
 import com.stripe.android.model.Token;
 import com.stripe.exception.AuthenticationException;
+import com.stripe.exception.CardException;
+import com.stripe.model.Charge;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -43,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     TextView check;
 
     public SQLiteDatabase db;
-
+    public Stripe stripe;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,14 +111,14 @@ public class MainActivity extends AppCompatActivity {
     public void createToken(Card card) {
         try {
 
-            Stripe stripe = new Stripe(keys.TEST_KEY);
+             stripe = new Stripe(keys.TEST_KEY);
 
             stripe.createToken(card,
                     new TokenCallback() {
                         public void onSuccess(Token token) {
                             // Send token to your server
                             storeCard(token);
-
+                            doCharge(token);
                         }
 
                         public void onError(Exception e) {
@@ -125,7 +130,27 @@ public class MainActivity extends AppCompatActivity {
             );
         }catch(AuthenticationException eAu){Log.e("StripePrueba", "Error in the token", eAu);}
     }
+    public void doCharge(Token token){
+        // Get the credit card details submitted by the form
 
+
+        // Create the charge on Stripe's servers - this will charge the user's card
+        try {
+            Map<String, Object> chargeParams = new HashMap<>();
+            chargeParams.put("amount", 1000); // amount in cents, again
+            chargeParams.put("currency", "eur");
+            chargeParams.put("source", token);
+            chargeParams.put("description", "Example charge");
+            Map<String, String> initialMetadata = new HashMap<String, String>();
+            initialMetadata.put("order_id", "xd");
+            chargeParams.put("metadata", initialMetadata);
+
+            Charge charge = Charge.create(chargeParams);
+        } catch (Exception e) {
+            Log.e("StripePrueba", "Error in the charge", e);
+        }
+
+    }
     private void storeCard(Token token) {
         if (db != null) {
 

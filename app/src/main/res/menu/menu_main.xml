@@ -6,4 +6,9 @@
         android:icon="@drawable/card_icon"
         android:title="Card Collection"
         pruebastripe:showAsAction="ifRoom"/>
+    <item
+        android:id="@+id/menu_camera"
+        android:icon="@drawable/camera_icon"
+        android:title="Card Collection"
+        pruebastripe:showAsAction="ifRoom"/>
 </menu>

@@ -10,7 +10,7 @@ import android.text.TextWatcher;
 public class FourDigitCardFormatWatcher implements TextWatcher {
 
     // Change this to what you want... ' ', '-' etc..
-    private static final char space = '-';
+    private static final char space = ' ';
 
     @Override
     public void onTextChanged(CharSequence s, int start, int before, int count) {

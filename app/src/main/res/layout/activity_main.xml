@@ -115,16 +115,47 @@
         android:layout_height="wrap_content"
         android:text="PAY"
         android:id="@+id/b_pay"
-        android:layout_below="@+id/ed4"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="37dp" />
+        android:layout_below="@+id/edPrice"
+        android:layout_alignRight="@+id/textView"
+        android:layout_alignEnd="@+id/textView"
+        android:layout_marginTop="24dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:id="@+id/checkTV"
-        android:layout_below="@+id/b_pay"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="27dp" />
+        android:layout_marginTop="27dp"
+        android:layout_below="@+id/bFill" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="FILL"
+        android:id="@+id/bFill"
+        android:layout_below="@+id/b_pay"
+        android:layout_alignLeft="@+id/b_pay"
+        android:layout_alignStart="@+id/b_pay" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:ems="10"
+        android:id="@+id/edPrice"
+        android:maxLength="3"
+        android:layout_below="@+id/ed4"
+        android:layout_alignLeft="@+id/ed4"
+        android:layout_alignStart="@+id/ed4" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Price (€)"
+        android:id="@+id/textView6"
+        android:layout_above="@+id/b_pay"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 </RelativeLayout>

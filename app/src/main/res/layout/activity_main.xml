@@ -86,7 +86,7 @@
         android:layout_below="@+id/ed2"
         android:layout_alignLeft="@+id/ed2"
         android:layout_alignStart="@+id/ed2"
-        android:maxLength="2" />
+        android:maxLength="4" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -144,7 +144,6 @@
         android:inputType="number"
         android:ems="10"
         android:id="@+id/edPrice"
-        android:maxLength="3"
         android:layout_below="@+id/ed4"
         android:layout_alignLeft="@+id/ed4"
         android:layout_alignStart="@+id/ed4" />

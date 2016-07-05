@@ -31,6 +31,8 @@ import org.json.JSONObject;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import io.card.payment.CardIOActivity;
+import io.card.payment.CreditCard;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -55,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     public SQLiteDatabase db;
     public Stripe stripe;
     public int price;
+    private int MY_SCAN_REQUEST_CODE = 100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+
     }
 
     @Override
@@ -95,6 +99,9 @@ public class MainActivity extends AppCompatActivity {
                 Intent a = new Intent(this, CollectionActivity.class);
                 startActivity(a);
                 break;
+            case R.id.menu_camera:
+                onScanPress(findViewById(android.R.id.content));
+                break;
         }
         return true;
 
@@ -102,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
 
     public String getStringCreditCard() {
         String creditCard = ed1.getText().toString();
-        creditCard = creditCard.replaceAll("-", "");
+        creditCard = creditCard.replaceAll(" ", "");
         return creditCard;
 
     }
@@ -156,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             body.put("token", token.getId());
             body.put("price", price);
+            
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -208,6 +216,67 @@ public class MainActivity extends AppCompatActivity {
     public String tokenToString(Token token) {
         Gson gson = new Gson();
         return gson.toJson(token);
+
+    }
+
+    public void onScanPress(View v) {
+        // This method is set up as an onClick handler in the layout xml
+        // e.g. android:onClick="onScanPress"
+
+        Intent scanIntent = new Intent(this, CardIOActivity.class);
+
+        // customize these values to suit your needs.
+        scanIntent.putExtra(CardIOActivity.EXTRA_REQUIRE_EXPIRY, true); // default: false
+        scanIntent.putExtra(CardIOActivity.EXTRA_REQUIRE_CVV, false); // default: false
+        scanIntent.putExtra(CardIOActivity.EXTRA_HIDE_CARDIO_LOGO, true); // default: false
+        scanIntent.putExtra(CardIOActivity.EXTRA_KEEP_APPLICATION_THEME, true); // default: false
+        scanIntent.putExtra(CardIOActivity.EXTRA_USE_PAYPAL_ACTIONBAR_ICON, false); // default: false
+
+        // hides the manual entry button
+        // if set, developers should provide their own manual entry mechanism in the app
+        scanIntent.putExtra(CardIOActivity.EXTRA_SUPPRESS_MANUAL_ENTRY, false); // default: false
+
+        // matches the theme of your application
+        scanIntent.putExtra(CardIOActivity.EXTRA_KEEP_APPLICATION_THEME, false); // default: false
+
+        // MY_SCAN_REQUEST_CODE is arbitrary and is only used within this activity.
+        startActivityForResult(scanIntent, MY_SCAN_REQUEST_CODE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        String credcard = "";
+        String expmonth = "";
+        String expyear = "";
+        String cvc;
+        if (data != null && data.hasExtra(CardIOActivity.EXTRA_SCAN_RESULT)) {
+            CreditCard scanResult = data.getParcelableExtra(CardIOActivity.EXTRA_SCAN_RESULT);
+
+            // Never log a raw card number. Avoid displaying it, but if necessary use getFormattedCardNumber()
+            credcard = scanResult.cardNumber;
+
+            // Do something with the raw number, e.g.:
+            // myService.setCardNumber( scanResult.cardNumber );
+
+            if (scanResult.isExpiryValid()) {
+                expmonth = scanResult.expiryMonth + "";
+                expyear = scanResult.expiryYear + "";
+            }
+
+            if (scanResult.cvv != null) {
+                // Never log or display a CVV
+                cvc = scanResult.cvv.toString();
+            }
+
+
+        } else {
+            check.setText("Scan was canceled.");
+        }
+        ed1.setText(credcard);
+        ed2.setText(expmonth);
+        ed3.setText(expyear);
 
     }
 

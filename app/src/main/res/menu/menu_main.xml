@@ -9,6 +9,11 @@
     <item
         android:id="@+id/menu_camera"
         android:icon="@drawable/camera_icon"
-        android:title="Card Collection"
+        android:title="Card.io"
+        pruebastripe:showAsAction="always" />
+    <item
+        android:id="@+id/menu_stripe"
+        android:icon="@drawable/stripe"
+        android:title="Stripe Connect"
         pruebastripe:showAsAction="ifRoom"/>
 </menu>

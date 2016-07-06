@@ -30,6 +30,6 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:24.0.0'
     compile 'com.android.volley:volley:1.0.0'
     compile 'io.card:android-sdk:5.4.0'
-    compile 'com.github.dbachelder:CreditCardEntry:1.4.7'
+    compile 'com.github.cooltechworks:CreditCardView:v1.0'
 
 }

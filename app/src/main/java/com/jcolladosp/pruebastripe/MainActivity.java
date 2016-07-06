@@ -19,6 +19,8 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.cooltechworks.creditcarddesign.CardEditActivity;
+import com.cooltechworks.creditcarddesign.CreditCardUtils;
 import com.google.gson.Gson;
 import com.stripe.android.Stripe;
 import com.stripe.android.TokenCallback;
@@ -37,14 +39,7 @@ import io.card.payment.CreditCard;
 public class MainActivity extends AppCompatActivity {
 
 
-    @Bind(R.id.ed1)
-    EditText ed1;
-    @Bind(R.id.ed2)
-    EditText ed2;
-    @Bind(R.id.ed3)
-    EditText ed3;
-    @Bind(R.id.ed4)
-    EditText ed4;
+
     @Bind(R.id.b_pay)
     Button b_pay;
     @Bind(R.id.checkTV)
@@ -56,19 +51,28 @@ public class MainActivity extends AppCompatActivity {
 
     public SQLiteDatabase db;
     public Stripe stripe;
+
+    public String cardHolderName = "";
+    public String creditCardNumber = "";
+    public String expiryDate = "";
+    public String cvv = "";
+    public int expmonth = 0;
+    public int expyear = 0;
     public int price;
-    private int MY_SCAN_REQUEST_CODE = 100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        ed1.addTextChangedListener(new FourDigitCardFormatWatcher());
+
         b_pay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                saveCreditCard();
+                final int GET_NEW_CARD = 2;
+                Intent intent = new Intent(MainActivity.this, CardEditActivity.class);
+
+                startActivityForResult(intent, GET_NEW_CARD);
             }
         });
         bFill.setOnClickListener(new View.OnClickListener() {
@@ -77,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
                 fillText();
             }
         });
-
 
 
     }
@@ -102,30 +105,23 @@ public class MainActivity extends AppCompatActivity {
             case R.id.menu_camera:
                 onScanPress(findViewById(android.R.id.content));
                 break;
+            case R.id.menu_stripe:
+                Intent e = new Intent(this, StripeConnectActivity.class);
+                startActivity(e);
         }
         return true;
 
     }
 
-    public String getStringCreditCard() {
-        String creditCard = ed1.getText().toString();
-        creditCard = creditCard.replaceAll(" ", "");
-        return creditCard;
 
-    }
+    public void createCreditCard() {
 
-    public void saveCreditCard() {
-        String cardnumber = getStringCreditCard();
-        Integer exp_month = Integer.parseInt(ed2.getText().toString());
-        Integer exp_year = Integer.parseInt(ed3.getText().toString());
-        String cvc = ed4.getText().toString();
-
-        Card card = new Card(cardnumber, exp_month, exp_year, cvc);
+        Card card = new Card(creditCardNumber, expmonth, expyear, cvv);
         if (card.validateCard() && card.validateCVC() && card.validateExpiryDate()) {
-            check.setText("Valid Card");
-
+            check.setText(R.string.valid_card);
+            card.setName(cardHolderName);
             createToken(card);
-        } else check.setText("Invalid Card");
+        } else check.setText(R.string.invalid_card);
 
 
     }
@@ -145,14 +141,14 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         public void onError(Exception e) {
-                            Log.e("StripePrueba", "Error in the token", e);
+                            Log.e(getString(R.string.log_stripe), getString(R.string.token_error), e);
                         }
 
 
                     }
             );
         } catch (AuthenticationException eAu) {
-            Log.e("StripePrueba", "Error in the token", eAu);
+            Log.e(getString(R.string.log_stripe), getString(R.string.error_auth), eAu);
         }
     }
 
@@ -163,12 +159,13 @@ public class MainActivity extends AppCompatActivity {
         try {
             body.put("token", token.getId());
             body.put("price", price);
-            
+            body.put("seller", "acct_18TpmlFe4c8fg7qS");
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
-        JsonObjectRequest request = Utils.makeStringRequest(Request.Method.POST,keys.SERVER, body, new Response.Listener<JSONObject>() {
+        JsonObjectRequest request = Utils.makeStringRequest(Request.Method.POST, keys.SERVER, body, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 Log.d("PAGOS", response.toString());
@@ -187,11 +184,11 @@ public class MainActivity extends AppCompatActivity {
             db = cardsDB.getWritableDatabase();
             synchronized (db) {
                 ContentValues cv = new ContentValues();
-                cv.put("tokens", tokenToString(token));
-                db.insert("Cards", null, cv);
+                cv.put(getString(R.string.tokens), tokenToString(token));
+                db.insert(getString(R.string.cards), null, cv);
             }
         } catch (Exception e) {
-            Log.e("PruebaStripe", "DataBase error");
+            Log.e(getString(R.string.log_stripe), getString(R.string.database_error));
 
         } finally {
             if (db != null && db.isOpen()) {
@@ -201,11 +198,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void fillText() {
-        ed1.setText("4242424242424242");
-        ed2.setText("12");
-        ed3.setText("19");
-        ed4.setText("123");
-        edPrice.setText("10");
+        edPrice.setText(R.string.price_example);
 
     }
 
@@ -220,26 +213,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onScanPress(View v) {
-        // This method is set up as an onClick handler in the layout xml
-        // e.g. android:onClick="onScanPress"
-
         Intent scanIntent = new Intent(this, CardIOActivity.class);
-
-        // customize these values to suit your needs.
         scanIntent.putExtra(CardIOActivity.EXTRA_REQUIRE_EXPIRY, true); // default: false
-        scanIntent.putExtra(CardIOActivity.EXTRA_REQUIRE_CVV, false); // default: false
+        scanIntent.putExtra(CardIOActivity.EXTRA_REQUIRE_CVV, true); // default: false
         scanIntent.putExtra(CardIOActivity.EXTRA_HIDE_CARDIO_LOGO, true); // default: false
         scanIntent.putExtra(CardIOActivity.EXTRA_KEEP_APPLICATION_THEME, true); // default: false
         scanIntent.putExtra(CardIOActivity.EXTRA_USE_PAYPAL_ACTIONBAR_ICON, false); // default: false
-
-        // hides the manual entry button
-        // if set, developers should provide their own manual entry mechanism in the app
         scanIntent.putExtra(CardIOActivity.EXTRA_SUPPRESS_MANUAL_ENTRY, false); // default: false
+        scanIntent.putExtra(CardIOActivity.EXTRA_REQUIRE_CARDHOLDER_NAME, true); // default: false
 
-        // matches the theme of your application
-        scanIntent.putExtra(CardIOActivity.EXTRA_KEEP_APPLICATION_THEME, false); // default: false
-
-        // MY_SCAN_REQUEST_CODE is arbitrary and is only used within this activity.
+        int MY_SCAN_REQUEST_CODE = 100;
         startActivityForResult(scanIntent, MY_SCAN_REQUEST_CODE);
     }
 
@@ -247,36 +230,41 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        String credcard = "";
-        String expmonth = "";
-        String expyear = "";
-        String cvc;
-        if (data != null && data.hasExtra(CardIOActivity.EXTRA_SCAN_RESULT)) {
-            CreditCard scanResult = data.getParcelableExtra(CardIOActivity.EXTRA_SCAN_RESULT);
+        if (resultCode == RESULT_OK && requestCode == 2) {
 
-            // Never log a raw card number. Avoid displaying it, but if necessary use getFormattedCardNumber()
-            credcard = scanResult.cardNumber;
+            cardHolderName = data.getStringExtra(CreditCardUtils.EXTRA_CARD_HOLDER_NAME);
+            creditCardNumber = data.getStringExtra(CreditCardUtils.EXTRA_CARD_NUMBER);
+            expiryDate = data.getStringExtra(CreditCardUtils.EXTRA_CARD_EXPIRY);
+            cvv = data.getStringExtra(CreditCardUtils.EXTRA_CARD_CVV);
 
-            // Do something with the raw number, e.g.:
-            // myService.setCardNumber( scanResult.cardNumber );
-
-            if (scanResult.isExpiryValid()) {
-                expmonth = scanResult.expiryMonth + "";
-                expyear = scanResult.expiryYear + "";
-            }
-
-            if (scanResult.cvv != null) {
-                // Never log or display a CVV
-                cvc = scanResult.cvv.toString();
-            }
-
-
-        } else {
-            check.setText("Scan was canceled.");
+            expmonth = Integer.parseInt(expiryDate.substring(0, 2));
+            expyear = Integer.parseInt(expiryDate.substring(3));
         }
-        ed1.setText(credcard);
-        ed2.setText(expmonth);
-        ed3.setText(expyear);
+        if (requestCode == 100) {
+
+            if (data != null && data.hasExtra(CardIOActivity.EXTRA_SCAN_RESULT)) {
+                CreditCard scanResult = data.getParcelableExtra(CardIOActivity.EXTRA_SCAN_RESULT);
+
+                // Never log a raw card number. Avoid displaying it, but if necessary use getFormattedCardNumber()
+                creditCardNumber = scanResult.cardNumber;
+
+                if (scanResult.isExpiryValid()) {
+                    expmonth = scanResult.expiryMonth;
+                    expyear = scanResult.expiryYear;
+
+                }
+
+                if (scanResult.cvv != null) {
+                    cvv = scanResult.cvv;
+                }
+
+
+            } else {
+                check.setText(R.string.scan_canceled);
+            }
+        }
+
+        createCreditCard();
 
     }
 

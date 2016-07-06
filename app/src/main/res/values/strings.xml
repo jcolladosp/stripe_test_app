@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">PruebaStripe</string>
+    <string name="scan_canceled">Scan was canceled.</string>
+    <string name="card_example">4242424242424242</string>
+    <string name="month_example">12</string>
+    <string name="year_example">19</string>
+    <string name="cvc_example">123</string>
+    <string name="price_example">10</string>
+    <string name="log_stripe">PruebaStripe</string>
+    <string name="database_error">DataBase error</string>
+    <string name="tokens">tokens</string>
+    <string name="cards">Cards</string>
+    <string name="token_error">Error in the token</string>
+    <string name="error_auth">Error in authentication</string>
+    <string name="valid_card">Valid Card</string>
+    <string name="invalid_card">Invalid Card</string>
 </resources>
